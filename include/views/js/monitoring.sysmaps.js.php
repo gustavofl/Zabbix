@@ -683,7 +683,8 @@ function getFontComboBox($name) {
 							GRAPH_ITEM_DRAWTYPE_LINE => _('Line'),
 							GRAPH_ITEM_DRAWTYPE_BOLD_LINE => _('Bold line'),
 							GRAPH_ITEM_DRAWTYPE_DOT => _('Dot'),
-							GRAPH_ITEM_DRAWTYPE_DASHED_LINE => _('Dashed line')
+							GRAPH_ITEM_DRAWTYPE_DASHED_LINE => _('Dashed line'),
+							GRAPH_ITEM_DRAWTYPE_ARROW => ('Seta')
 						]))
 					)
 					->addRow(_('Colour (OK)'),
@@ -763,7 +764,8 @@ function getFontComboBox($name) {
 					GRAPH_ITEM_DRAWTYPE_LINE => _('Line'),
 					GRAPH_ITEM_DRAWTYPE_BOLD_LINE => _('Bold line'),
 					GRAPH_ITEM_DRAWTYPE_DOT => _('Dot'),
-					GRAPH_ITEM_DRAWTYPE_DASHED_LINE => _('Dashed line')
+					GRAPH_ITEM_DRAWTYPE_DASHED_LINE => _('Dashed line'),
+					GRAPH_ITEM_DRAWTYPE_ARROW => ('Seta')
 				]))
 			],
 			new CColor('linktrigger_#{linktriggerid}_color', '#{color}', false),
