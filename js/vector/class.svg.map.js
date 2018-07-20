@@ -842,6 +842,65 @@ SVGMapLink.LINE_STYLE_DEFAULT	= 0;
 SVGMapLink.LINE_STYLE_BOLD		= 2;
 SVGMapLink.LINE_STYLE_DOTTED	= 3;
 SVGMapLink.LINE_STYLE_DASHED	= 4;
+SVGMapLink.LINE_STYLE_ARROW 	= 7;
+
+SVGMapLink.ARROW_WIDTH          = 6;
+SVGMapLink.RAIO_DISTANCIA       = 40;
+
+// Metodos para auxiliar o desenho das setas no metodo SVGMapLink.prototype.update
+SVGMapLink.prototype.getDiff = function(indice) {
+	// Calcular diferenca
+	dx = this.options.elements[1].x - this.options.elements[0].x;
+	dy = this.options.elements[1].y - this.options.elements[0].y;
+	dist = Math.sqrt(dx*dx + dy*dy);
+	razao = SVGMapLink.RAIO_DISTANCIA/dist;
+	this.ang_rotacao = Math.atan(dy/dx)*180/Math.PI;
+	if (dx > 0)
+		this.ang_rotacao += 180;
+
+	// redimensionar a linha
+	diff = { x: 0 , y: 0 };
+	diff.x = (-1)**indice * razao * dx;
+	diff.y = (-1)**indice * razao * dy;
+
+	return diff;
+}
+
+// Nao funciona corretamente
+SVGMapLink.prototype.isArticulation = function(indice) {
+	urlImagem = map_elements[indice].image.attributes["xlink:href"];
+	idImagem = urlImagem.replace(/.*\?iconid=/i, "");
+	console.log(idImagem);
+	return idImagem == 57;
+	// return map_elements[indice].options.elementtype == 4 || map_elements[indice].options.label == "";
+}
+
+SVGMapLink.prototype.getArrow = function(indice, diff) {
+	x=this.options.elements[indice].x + diff.x;
+	y=this.options.elements[indice].y + diff.y;
+	path=[[x,y-3],[x,y+3],[x+6,y]];
+
+	return {
+		type: 'path',
+		attributes: {
+			d: 'M'+path[0][0]+','+path[0][1]+' L'+path[1][0]+','+path[1][1]+' L'+path[2][0]+','+path[2][1]+' z',
+			transform: "rotate("+(this.ang_rotacao+180*indice)+","+x+","+y+")"
+		}
+	};
+}
+
+SVGMapLink.prototype.getCircle = function(indice) {
+	return {
+		type: 'circle',
+		attributes: {
+			cx: this.options.elements[indice].x,
+			cy: this.options.elements[indice].y,
+			r: SVGMapLink.ARROW_WIDTH/2,
+			'stroke-width': 1,
+			fill: '#'+this.options.color
+		}
+	};
+}
 
 /**
  * Update link.
@@ -849,9 +908,12 @@ SVGMapLink.LINE_STYLE_DASHED	= 4;
  * @param {object}    options   Link attributes (match field names in data source).
  */
 SVGMapLink.prototype.update = function(options) {
+	console.log(this);
+
 	// Data type normalization.
 	options.drawtype = parseInt(options.drawtype);
 	options.elements = [this.map.elements[options.selementid1], this.map.elements[options.selementid2]];
+	map_elements = [this.map.elements[options.selementid1], this.map.elements[options.selementid2]];
 
 	if (typeof options.elements[0] === 'undefined' || typeof options.elements[1] === 'undefined') {
 		var remove = true;
@@ -895,6 +957,12 @@ SVGMapLink.prototype.update = function(options) {
 		fill: '#' + this.map.options.theme.backgroundcolor
 	};
 
+	this.ang_rotacao = 0;
+	diff0 = { x: 0 , y: 0 };
+	diff1 = { x: 0 , y: 0 };
+	start = { type: 'hr' };
+	end = { type: 'hr' };
+	background_text_border = {};
 	switch (options.drawtype) {
 		case SVGMapLink.LINE_STYLE_BOLD:
 			attributes['stroke-width'] = 2;
@@ -907,19 +975,39 @@ SVGMapLink.prototype.update = function(options) {
 		case SVGMapLink.LINE_STYLE_DASHED:
 			attributes['stroke-dasharray'] = '4,4';
 			break;
+
+		case SVGMapLink.LINE_STYLE_ARROW:
+			attributes['stroke-width'] = SVGMapLink.ARROW_WIDTH;
+			background_text_border['stroke-width'] = SVGMapLink.ARROW_WIDTH/2;
+
+			if(!this.isArticulation(0) && options.elements[0].x == map_elements[0].center.x){
+				diff0 = this.getDiff(0);
+				start = this.getArrow(0, diff0);
+			} else {
+				start = this.getCircle(0);
+			}
+
+			if(!this.isArticulation(1) && options.elements[1].x == map_elements[1].center.x){
+				diff1 = this.getDiff(1);
+				end = this.getArrow(1, diff1);
+			} else {
+				end = this.getCircle(1);
+			}
+			break;
 	}
 
-	this.element = this.map.layers.links.add('g', attributes, [
-		{
-			type: 'line',
-			attributes: {
-				x1: options.elements[0].x,
-				y1: options.elements[0].y,
-				x2: options.elements[1].x,
-				y2: options.elements[1].y
-			}
-		}
-	]);
+	this.element = this.map.layers.links.add('g', attributes, []);
+
+	this.element.add(start.type, start.attributes, []);
+
+	this.element.add('line', {
+				x1: options.elements[0].x+diff0.x,
+				y1: options.elements[0].y+diff0.y,
+				x2: options.elements[1].x+diff1.x,
+				y2: options.elements[1].y+diff1.y
+			}, []);
+
+	this.element.add(end.type, end.attributes, []);
 
 	this.element.add('textarea', {
 			x: options.center.x,
@@ -931,8 +1019,7 @@ SVGMapLink.prototype.update = function(options) {
 				horizontal: 'center',
 				vertical: 'middle'
 			},
-			background: {
-			}
+			background: background_text_border
 		}, options.label
 	);
 };
