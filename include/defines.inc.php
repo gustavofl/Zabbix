@@ -510,11 +510,13 @@ define('GRAPH_ITEM_DRAWTYPE_DOT',			3);
 define('GRAPH_ITEM_DRAWTYPE_DASHED_LINE',	4);
 define('GRAPH_ITEM_DRAWTYPE_GRADIENT_LINE',	5);
 define('GRAPH_ITEM_DRAWTYPE_BOLD_DOT',		6);
+define('GRAPH_ITEM_DRAWTYPE_ARROW',			7);
 
 define('MAP_LINK_DRAWTYPE_LINE',			0);
 define('MAP_LINK_DRAWTYPE_BOLD_LINE',		2);
 define('MAP_LINK_DRAWTYPE_DOT',				3);
 define('MAP_LINK_DRAWTYPE_DASHED_LINE',		4);
+define('MAP_ITEM_DRAWTYPE_ARROW',			7);
 
 define('SERVICE_ALGORITHM_NONE',	0); // do not calculate
 define('SERVICE_ALGORITHM_MAX',		1); // problem, if one children has a problem
